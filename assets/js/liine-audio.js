@@ -40,8 +40,15 @@ function app(){
 function init(){
 	// CAMERA
 	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-	camera.position.z = 1000;
-	camera.position.y = 45;
+	
+	camera.position.y = 180;
+	camera.position.x = 360;
+	camera.position.z = 1200;
+	
+
+	camera.rotation.y = 45;  // Y first
+	camera.rotation.x = 45;  // X second
+	camera.rotation.z = 0;
 
     // SCENE
     scene = new THREE.Scene();
@@ -50,14 +57,16 @@ function init(){
 	// renderer = new THREE.WebGLRenderer();
 	renderer = new THREE.CanvasRenderer();
 	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer.setClearColor( 0xffffff, 1 );
 
 	// CONTROLLER MOUSE
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
 	controls.dampingFactor = 0.03;
-	controls.enableZoom = true;
+	controls.enableZoom = false;
 	controls.minDistance = 0.0;
 	controls.maxDistance = 2000.0;
 	controls.maxPolarAngle = 90;
+	controls.enabled = false;
 
     //set the size of the renderer
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -70,25 +79,23 @@ function init(){
 	renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
 	renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
 
-
-	
-
 	// ACTUALLY ADD
 	createScene();
 }
 /* ======================[ LOAD ]========================== */
 function preload() {
-  song = loadSound('assets/misc/ForgetEveryone.mp3'); 
+  	song = loadSound('assets/misc/Qasus-Sheis.mp3'); 
 }
 
 function setup() {
-  song.play();
+	createCanvas(0,0);
+  	song.play();
 
-  // create a new Amplitude analyzer
-  analyzer = new p5.Amplitude();
+  	// create a new Amplitude analyzer
+  	analyzer = new p5.Amplitude();
 
-  // Patch the input to an volume analyzer
-  analyzer.setInput(song);
+  	// Patch the input to an volume analyzer
+  	analyzer.setInput(song);
 }
 function sound(){
 	var request = new XMLHttpRequest();
@@ -155,24 +162,23 @@ function onDocumentMouseUp( event ) {
 }
 /* =======================[ ON ANIM ]========================= */
 function animate( time ){
-	camera.position.x += 0.1;
+	// camera.position.x += 0.5;
 	requestAnimationFrame( animate );
 	renderer.render( scene, camera );
 	controls.update();
 	animateLines();
 
-	if(analyzer.getLevel() >= 0.3){
+	if(analyzer.getLevel() >= 0.3 && analyzer.getLevel() < 0.6){
+		renderer.setClearColor( 0xffffff, 1 );
+	}else if(analyzer.getLevel() >= 0.5){
 		renderer.setClearColor( Math.random() * 0xffffff, 1 );
-		
-
-	}else if(analyzer.getLevel() >= 0.6){
-		renderer.setClearColor( Math.random() * 0xffffff, 1 );
-		
-
-	}else{
+	}else if(analyzer.getLevel() <= 0.12){
 		renderer.setClearColor( 0x000000, 1 );
+	}else{
+		renderer.setClearColor( 0xffffff, 1 );
 		
 	}
+	
 	
 }
 
@@ -197,11 +203,11 @@ function animateLines(){
 	for ( var ix = 0; ix < AMOUNTX; ix ++ ) {
 		
 		for ( var iy = 0; iy < AMOUNTY; iy ++ ) {
-			
-			
 			particle = particles[ i++ ];
 			if(analyzer.getLevel() >= 0.3){
 				particle.material.color.setHex( 0x000000 );
+			}else if(analyzer.getLevel() <= 0.12){
+				particle.material.color.setHex( 0xffffff );
 			}else{
 				particle.material.color.setHex( getRandomColor() );
 			}
@@ -211,7 +217,7 @@ function animateLines(){
 		}
 	}
 	
-	count += 0.2 * rms;
+	count += 0.5 * rms;
 }
 /* ========================[ CONTROLLER ]======================== */
 function createScene(){
